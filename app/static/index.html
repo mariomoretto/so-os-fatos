@@ -8,115 +8,313 @@
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Só os Fatos">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="theme-color" content="#f6f5f1" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#141413" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#fafaf8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0d0d0c" media="(prefers-color-scheme: dark)">
 <style>
   :root {
-    --bg: #f6f5f1; --card: #ffffff; --ink: #1b1b1a; --muted: #6b6a65;
-    --line: #e4e2db; --accent: #1f5f4a; --warn: #9a5b12; --warn-bg: #fbf3e6;
+    --bg: #fafaf8; --card: #ffffff; --ink: #121211; --muted: #6f6e69; --faint: #a3a29c;
+    --line: #ebeae5; --chip: #f1f0ec; --accent: #0e7a5a; --accent-bg: #e6f4ee;
+    --live: #e03131; --warn: #9a5b12; --warn-bg: #fbf3e6;
+    --shadow: 0 1px 2px rgba(0,0,0,.04), 0 4px 16px rgba(0,0,0,.04);
+    --c-politica: #6d5bd0; --c-economia: #0e7a5a; --c-esportes: #e8590c; --c-tecnologia: #1c6dd0; --c-games: #c2255c;
   }
   @media (prefers-color-scheme: dark) {
-    :root { --bg: #141413; --card: #1e1e1c; --ink: #ecebe6; --muted: #9c9a92;
-            --line: #2f2e2b; --accent: #6cc4a4; --warn: #e3a95b; --warn-bg: #2a2218; }
+    :root { --bg: #0d0d0c; --card: #181816; --ink: #efeee9; --muted: #9b9a93; --faint: #6b6a64;
+            --line: #262523; --chip: #222220; --accent: #5fd0a8; --accent-bg: #15291f;
+            --live: #ff6b6b; --warn: #e3a95b; --warn-bg: #2a2218; --shadow: none;
+            --c-politica: #9d8ff0; --c-economia: #5fd0a8; --c-esportes: #ff9254; --c-tecnologia: #6aa8f5; --c-games: #f06595; }
   }
-  * { box-sizing: border-box; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   body { margin: 0; background: var(--bg); color: var(--ink);
-         font: 16px/1.5 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; }
-  header { position: sticky; top: 0; padding-top: env(safe-area-inset-top); background: var(--bg); border-bottom: 1px solid var(--line); z-index: 1; }
-  .wrap { max-width: 720px; margin: 0 auto; padding: 0 16px; }
-  .top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-  h1 { font-size: 20px; margin: 14px 0 2px; letter-spacing: -0.01em; }
-  #reload { border: 0; background: none; color: var(--muted); font: inherit; font-size: 13px; padding: 8px 0 8px 8px; cursor: pointer; }
-  .tag { color: var(--muted); font-size: 13px; margin: 0 0 10px; }
-  nav { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 12px; scrollbar-width: none; }
-  nav button { border: 1px solid var(--line); background: var(--card); color: var(--ink);
-               padding: 6px 14px; border-radius: 999px; font: inherit; font-size: 14px; white-space: nowrap; cursor: pointer; }
-  nav button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
-  main { padding: 16px 0 calc(48px + env(safe-area-inset-bottom)); }
-  article { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px; margin-bottom: 12px; }
-  .meta { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
-  h2 { font-size: 18px; line-height: 1.3; margin: 4px 0 10px; }
-  ul.facts { margin: 0; padding-left: 18px; }
+         font: 16px/1.5 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+         -webkit-font-smoothing: antialiased; }
+  button { font: inherit; color: inherit; }
+  .wrap { max-width: 680px; margin: 0 auto; padding: 0 16px; }
+
+  /* topo */
+  header { position: sticky; top: 0; z-index: 2; padding-top: env(safe-area-inset-top);
+           background: color-mix(in srgb, var(--bg) 85%, transparent);
+           backdrop-filter: saturate(180%) blur(16px); -webkit-backdrop-filter: saturate(180%) blur(16px);
+           border-bottom: 1px solid var(--line); }
+  .top { display: flex; align-items: flex-end; justify-content: space-between; padding: 14px 0 10px; }
+  h1 { font-size: 26px; line-height: 1.1; margin: 0; letter-spacing: -0.03em; font-weight: 800; }
+  h1 span { color: var(--accent); }
+  .sub { color: var(--muted); font-size: 13px; margin-top: 2px; }
+  .refresh { display: flex; align-items: center; gap: 6px; border: 0; background: var(--chip);
+             color: var(--muted); font-size: 12px; padding: 6px 10px; border-radius: 999px; cursor: pointer; }
+  .refresh svg { width: 14px; height: 14px; }
+  .refresh.spin svg { animation: spin .8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .chips { display: flex; gap: 8px; overflow-x: auto; padding: 0 0 12px; scrollbar-width: none; }
+  .chips::-webkit-scrollbar { display: none; }
+  .chips button { border: 1px solid var(--line); background: var(--card); padding: 7px 14px; border-radius: 999px;
+                  font-size: 14px; font-weight: 500; white-space: nowrap; cursor: pointer; transition: all .15s; }
+  .chips button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+
+  main { padding: 16px 0 calc(96px + env(safe-area-inset-bottom)); }
+
+  /* notícias */
+  .story { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 18px;
+           margin-bottom: 14px; box-shadow: var(--shadow); animation: up .25s ease both; }
+  @keyframes up { from { opacity: 0; transform: translateY(6px); } }
+  .meta { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 10px; font-size: 12.5px; color: var(--muted); }
+  .cat { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; color: var(--c, var(--accent)); }
+  .cat::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+  .badge { display: inline-flex; align-items: center; gap: 4px; background: var(--accent-bg); color: var(--accent);
+           font-weight: 600; padding: 2px 8px; border-radius: 999px; margin-left: auto; }
+  .story h2 { font-size: 19px; line-height: 1.3; margin: 10px 0 12px; letter-spacing: -0.015em; font-weight: 700; }
+  .srcs { display: flex; flex-direction: column; border-top: 1px solid var(--line); }
+  .src { display: flex; gap: 10px; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid var(--line);
+         color: var(--ink); text-decoration: none; font-size: 14.5px; line-height: 1.4; }
+  .src:last-child { border-bottom: 0; padding-bottom: 0; }
+  .src b { flex: none; min-width: 64px; font-size: 11.5px; font-weight: 700; text-transform: uppercase;
+           letter-spacing: .03em; color: var(--muted); padding-top: 2px; }
+  .src span { flex: 1; }
+  .src i { flex: none; color: var(--faint); font-style: normal; }
+  ul.facts { margin: 0 0 12px; padding-left: 18px; }
   ul.facts li { margin-bottom: 6px; }
   .conf { font-size: 12px; color: var(--accent); margin-left: 4px; white-space: nowrap; }
-  .div { background: var(--warn-bg); color: var(--warn); border-radius: 8px; padding: 8px 10px; margin-top: 10px; font-size: 14px; }
-  details { margin-top: 10px; font-size: 14px; }
-  summary { color: var(--muted); cursor: pointer; }
-  details a, .srcs a { color: var(--accent); display: block; margin-top: 6px; text-decoration: none; }
-  .srcs { font-size: 15px; }
-  .meta .conf { margin: 0; text-transform: none; letter-spacing: 0; }
-  .empty { color: var(--muted); text-align: center; padding: 48px 0; }
+  .div { background: var(--warn-bg); color: var(--warn); border-radius: 10px; padding: 8px 10px; margin-bottom: 12px; font-size: 14px; }
+  .empty { color: var(--muted); text-align: center; padding: 56px 0; }
+  .skel { height: 150px; border-radius: 18px; margin-bottom: 14px;
+          background: linear-gradient(90deg, var(--chip) 0%, var(--line) 50%, var(--chip) 100%);
+          background-size: 200% 100%; animation: shimmer 1.2s infinite; }
+  @keyframes shimmer { to { background-position: -200% 0; } }
+
+  /* placar */
+  .league { margin-bottom: 20px; }
+  .league h3 { display: flex; align-items: center; gap: 8px; font-size: 13px; text-transform: uppercase;
+               letter-spacing: .05em; color: var(--muted); margin: 0 4px 8px; }
+  .league h3 img { width: 18px; height: 18px; }
+  .games { background: var(--card); border: 1px solid var(--line); border-radius: 18px; box-shadow: var(--shadow); overflow: hidden; }
+  .game { border-bottom: 1px solid var(--line); }
+  .game:last-child { border-bottom: 0; }
+  .game summary { list-style: none; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
+                  gap: 10px; padding: 14px 16px; cursor: pointer; }
+  .game summary::-webkit-details-marker { display: none; }
+  .team { display: flex; align-items: center; gap: 8px; min-width: 0; font-weight: 600; font-size: 15px; }
+  .team.away { flex-direction: row-reverse; text-align: right; }
+  .team img { width: 28px; height: 28px; object-fit: contain; flex: none; }
+  .team span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .team.lost { color: var(--muted); font-weight: 500; }
+  .mid { display: flex; flex-direction: column; align-items: center; min-width: 78px; }
+  .score { font-size: 22px; font-weight: 800; letter-spacing: .02em; font-variant-numeric: tabular-nums; }
+  .status { font-size: 11.5px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .03em; }
+  .status.live { color: var(--live); display: flex; align-items: center; gap: 5px; }
+  .status.live::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--live); animation: pulse 1.4s infinite; }
+  @keyframes pulse { 50% { opacity: .25; } }
+  .time { font-size: 18px; font-weight: 700; }
+  .goals { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 16px; padding: 0 16px 14px; font-size: 13px; color: var(--muted); }
+  .goals .a { text-align: right; grid-column: 2; }
+  .goals .h { grid-column: 1; }
+  .goals .none { grid-column: 1 / -1; text-align: center; }
+
+  /* abas */
+  .tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 3; display: flex; justify-content: center; gap: 8px;
+          padding: 8px 16px calc(8px + env(safe-area-inset-bottom));
+          background: color-mix(in srgb, var(--bg) 85%, transparent);
+          backdrop-filter: saturate(180%) blur(16px); -webkit-backdrop-filter: saturate(180%) blur(16px);
+          border-top: 1px solid var(--line); }
+  .tabs button { flex: 1; max-width: 200px; display: flex; flex-direction: column; align-items: center; gap: 2px;
+                 border: 0; background: none; color: var(--faint); font-size: 11.5px; font-weight: 600; padding: 4px; cursor: pointer; }
+  .tabs svg { width: 24px; height: 24px; }
+  .tabs button[aria-pressed="true"] { color: var(--ink); }
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--live); display: none; position: relative; top: -26px; left: 14px; margin-bottom: -6px; }
+  .dot.on { display: block; }
 </style>
 </head>
 <body>
 <header>
   <div class="wrap">
-    <div class="top"><h1>Só os Fatos</h1><button id="reload">↻ <span id="when"></span></button></div>
-    <p class="tag">Só o que 2 ou mais veículos noticiaram.</p>
-    <nav id="nav"></nav>
+    <div class="top">
+      <div>
+        <h1>Só os Fatos<span>.</span></h1>
+        <div class="sub" id="sub">Só o que 2 ou mais veículos noticiaram</div>
+      </div>
+      <button class="refresh" id="reload" aria-label="Atualizar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-2.6-6.4M21 4v5h-5"/></svg>
+        <span id="when"></span>
+      </button>
+    </div>
+    <nav class="chips" id="chips"></nav>
   </div>
 </header>
-<main class="wrap" id="list"><p class="empty">Carregando…</p></main>
+
+<main class="wrap" id="list"></main>
+
+<nav class="tabs">
+  <button data-tab="noticias">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M4 5h13v14H6a2 2 0 0 1-2-2V5Z"/><path d="M17 9h3v8a2 2 0 0 1-2 2h-1M8 9h5M8 13h5M8 16h3"/></svg>
+    Notícias
+  </button>
+  <button data-tab="placar">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m12 7.5 4 2.9-1.5 4.7h-5L8 10.4l4-2.9ZM12 3v4.5M21 10.4l-5 0M17.5 19.5l-3-4.4M6.5 19.5l3-4.4M3 10.4h5"/></svg>
+    Placar
+    <i class="dot" id="livedot"></i>
+  </button>
+</nav>
 
 <script>
-const nav = document.getElementById("nav");
-const list = document.getElementById("list");
-let labels = {};
-const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const $ = id => document.getElementById(id);
+const chips = $("chips"), list = $("list");
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const hhmm = d => d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
 
-function when(iso) {
-  const d = new Date(iso);
-  return d.toLocaleString("pt-BR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
+function ago(iso) {
+  const d = new Date(iso), min = Math.round((Date.now() - d) / 60000);
+  if (min < 1) return "agora";
+  if (min < 60) return `há ${min} min`;
+  if (min < 24 * 60) return `há ${Math.round(min / 60)} h`;
+  return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" }) + " · " + hhmm(d);
 }
 
-function card(s) {
-  const facts = s.facts.map(f =>
-    `<li>${esc(f.text)}<span class="conf" title="${esc(f.sources.join(", "))}">✓ ${f.sources.length} fontes</span></li>`).join("");
-  const div = s.divergences.length
-    ? `<div class="div"><strong>Divergência entre fontes:</strong> ${s.divergences.map(esc).join("<br>")}</div>` : "";
-  const srcs = s.sources.map(a =>
-    `<a href="${esc(a.link)}" target="_blank" rel="noopener">${esc(a.source)} — ${esc(a.title)}</a>`).join("");
+function setChips(items, active, onPick) {
+  chips.innerHTML = items.map(([k, v]) => `<button data-k="${k}" aria-pressed="${k === active}">${v}</button>`).join("");
+  chips.onclick = e => { const k = e.target.dataset.k; if (k !== undefined) onPick(k); };
+}
+
+function skeleton() { list.innerHTML = '<div class="skel"></div>'.repeat(3); }
+
+/* ---------- Notícias ---------- */
+let news = null, cat = "";
+
+function storyCard(s) {
   const outlets = new Set(s.sources.map(a => a.source)).size;
-  const body = s.facts.length
-    ? `<ul class="facts">${facts}</ul>${div}<details><summary>Matérias originais (${s.sources.length})</summary>${srcs}</details>`
-    : `<div class="srcs">${srcs}</div>`;
-  return `<article>
-    <div class="meta">${esc(labels[s.category] || s.category)} · ${when(s.created_at)} · <span class="conf">✓ ${outlets} veículos</span></div>
-    <h2>${esc(s.headline)}</h2>
-    ${body}
+  const srcs = s.sources.map(a => `<a class="src" href="${esc(a.link)}" target="_blank" rel="noopener">
+      <b>${esc(a.source)}</b><span>${esc(a.title)}</span><i>↗</i></a>`).join("");
+  const facts = s.facts.length ? `<ul class="facts">${s.facts.map(f =>
+      `<li>${esc(f.text)}<span class="conf">✓ ${f.sources.length}</span></li>`).join("")}</ul>` : "";
+  const div = s.divergences.length
+    ? `<div class="div"><strong>Divergência:</strong> ${s.divergences.map(esc).join("<br>")}</div>` : "";
+  return `<article class="story">
+    <div class="meta">
+      <span class="cat" style="--c: var(--c-${esc(s.category)})">${esc(news.categorias[s.category] || s.category)}</span>
+      <span>${ago(s.created_at)}</span>
+      <span class="badge">✓ ${outlets} veículos</span>
+    </div>
+    <h2>${esc(s.headline)}</h2>${facts}${div}
+    <div class="srcs">${srcs}</div>
   </article>`;
 }
 
-let data = { noticias: [] }, current = "";
-
-function show(cat) {
-  current = cat;
-  [...nav.children].forEach(b => b.setAttribute("aria-pressed", b.dataset.cat === cat));
-  const items = data.noticias.filter(s => !cat || s.category === cat);
-  list.innerHTML = items.length ? items.map(card).join("")
-    : `<p class="empty">Nenhuma notícia confirmada aqui ainda.</p>`;
+function showNews() {
+  setChips([["", "Tudo"], ...Object.entries(news.categorias)], cat, k => { cat = k; showNews(); });
+  const items = news.noticias.filter(s => !cat || s.category === cat);
+  list.innerHTML = items.length ? items.map(storyCard).join("") : `<p class="empty">Nada por aqui ainda.</p>`;
+  $("when").textContent = ago(news.gerado_em);
+  $("sub").textContent = "Só o que 2 ou mais veículos noticiaram";
 }
 
-async function load() {
-  try {
-    data = await (await fetch("noticias.json", { cache: "no-store" })).json();
-  } catch {
-    if (!data.gerado_em) { list.innerHTML = `<p class="empty">Sem conexão.</p>`; return; }
-  }
-  labels = data.categorias;
-  document.getElementById("when").textContent = data.gerado_em ? when(data.gerado_em) : "";
-  const all = { "": "Tudo", ...labels };
-  nav.innerHTML = Object.entries(all).map(([k, v]) => `<button data-cat="${k}">${v}</button>`).join("");
-  show(current);
+async function loadNews() {
+  if (!news) skeleton();
+  try { news = await (await fetch("noticias.json", { cache: "no-store" })).json(); }
+  catch { if (!news) { list.innerHTML = `<p class="empty">Sem conexão.</p>`; return; } }
+  if (tab === "noticias") showNews();
 }
 
-nav.onclick = e => e.target.dataset.cat !== undefined && show(e.target.dataset.cat);
-document.getElementById("reload").onclick = load;
-document.addEventListener("visibilitychange", () => document.visibilityState === "visible" && load());
+/* ---------- Placar (ESPN, direto do aparelho) ---------- */
+const LEAGUES = [
+  ["bra.1", "Brasileirão"], ["bra.2", "Série B"], ["bra.copa_do_brazil", "Copa do Brasil"],
+  ["conmebol.libertadores", "Libertadores"], ["conmebol.sudamericana", "Sul-Americana"],
+  ["uefa.champions", "Champions League"], ["eng.1", "Premier League"], ["esp.1", "La Liga"],
+];
+const DAYS = [["-1", "Ontem"], ["0", "Hoje"], ["1", "Amanhã"]];
+let day = "0", games = {}, timer = null;
+
+function ymd(offset) {
+  const d = new Date(); d.setDate(d.getDate() + Number(offset));
+  return `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}`;
+}
+
+function status(ev) {
+  const t = ev.status.type;
+  if (t.name === "STATUS_POSTPONED") return `<span class="status">Adiado</span>`;
+  if (t.name === "STATUS_CANCELED") return `<span class="status">Cancelado</span>`;
+  if (t.state === "pre") return "";
+  if (t.state === "post") return `<span class="status">${t.detail.includes("Pen") ? "Fim · pênaltis" : t.detail.includes("AET") ? "Fim · prorrog." : "Encerrado"}</span>`;
+  const label = t.shortDetail === "HT" ? "Intervalo" : (ev.status.displayClock || t.shortDetail);
+  return `<span class="status live">${esc(label)}</span>`;
+}
+
+function gameRow(ev) {
+  const c = ev.competitions[0];
+  const home = c.competitors.find(x => x.homeAway === "home"), away = c.competitors.find(x => x.homeAway === "away");
+  const pre = ev.status.type.state === "pre";
+  const team = (x, side) => `<div class="team ${side} ${ev.status.type.completed && x.winner === false && (home.winner || away.winner) ? "lost" : ""}">
+      ${x.team.logo ? `<img src="${esc(x.team.logo)}" alt="" loading="lazy">` : ""}<span>${esc(x.team.shortDisplayName || x.team.displayName)}</span></div>`;
+  const mid = pre
+    ? `<div class="time">${hhmm(new Date(ev.date))}</div>${status(ev)}`
+    : `<div class="score">${esc(home.score)} – ${esc(away.score)}</div>${status(ev)}`;
+  const goals = (c.details || []).filter(d => d.scoringPlay).map(d => {
+    const side = d.team?.id === home.team.id ? "h" : "a";
+    const who = (d.athletesInvolved || []).map(a => a.displayName).join(", ") || "Gol";
+    const kind = d.ownGoal ? " (contra)" : d.penaltyKick ? " (pên.)" : "";
+    return `<div class="${side}">⚽ ${esc(who)}${kind} ${esc(d.clock?.displayValue || "")}</div>`;
+  }).join("");
+  return `<details class="game"><summary>${team(home, "home")}<div class="mid">${mid}</div>${team(away, "away")}</summary>
+    ${pre ? "" : `<div class="goals">${goals || '<div class="none">Sem gols</div>'}</div>`}</details>`;
+}
+
+function showGames() {
+  setChips(DAYS, day, k => { day = k; loadGames(); });
+  const blocks = LEAGUES.filter(([k]) => games[k]?.events?.length).map(([k, name]) => {
+    const evs = [...games[k].events].sort((a, b) =>
+      ({ in: 0, pre: 1, post: 2 }[a.status.type.state] - { in: 0, pre: 1, post: 2 }[b.status.type.state]) || a.date.localeCompare(b.date));
+    const logo = games[k].leagues?.[0]?.logos?.[0]?.href;
+    return `<section class="league"><h3>${logo ? `<img src="${esc(logo)}" alt="">` : ""}${name}</h3>
+      <div class="games">${evs.map(gameRow).join("")}</div></section>`;
+  });
+  const open = [...list.querySelectorAll("details[open] summary")].map(s => s.textContent);
+  list.innerHTML = blocks.length ? blocks.join("") : `<p class="empty">Nenhum jogo ${day === "0" ? "hoje" : day === "-1" ? "ontem" : "amanhã"}.</p>`;
+  list.querySelectorAll("details summary").forEach(s => { if (open.includes(s.textContent)) s.parentElement.open = true; });
+  $("when").textContent = hhmm(new Date());
+  $("sub").textContent = "Toque num jogo para ver os gols";
+}
+
+async function loadGames() {
+  if (tab !== "placar") return;
+  const wanted = day;
+  if (!Object.keys(games).length) skeleton();
+  const res = await Promise.all(LEAGUES.map(([k]) =>
+    fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${k}/scoreboard?dates=${ymd(wanted)}`)
+      .then(r => r.json()).catch(() => null)));
+  if (wanted !== day || tab !== "placar") return;
+  games = Object.fromEntries(LEAGUES.map(([k], i) => [k, res[i]]));
+  showGames();
+  const live = Object.values(games).some(g => g?.events?.some(e => e.status.type.state === "in"));
+  $("livedot").classList.toggle("on", live);
+  clearTimeout(timer);
+  if (live || day === "0") timer = setTimeout(loadGames, live ? 30000 : 120000);
+}
+
+/* ---------- Abas ---------- */
+let tab = location.hash === "#placar" ? "placar" : "noticias";
+
+function go(t) {
+  tab = t;
+  history.replaceState(null, "", t === "placar" ? "#placar" : location.pathname);
+  document.querySelectorAll(".tabs button").forEach(b => b.setAttribute("aria-pressed", b.dataset.tab === t));
+  clearTimeout(timer);
+  window.scrollTo(0, 0);
+  if (t === "placar") { games = {}; loadGames(); } else if (news) showNews(); else loadNews();
+}
+
+document.querySelector(".tabs").onclick = e => { const b = e.target.closest("button"); if (b) go(b.dataset.tab); };
+$("reload").onclick = async () => {
+  $("reload").classList.add("spin");
+  await (tab === "placar" ? loadGames() : loadNews());
+  $("reload").classList.remove("spin");
+};
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState !== "visible") return clearTimeout(timer);
+  tab === "placar" ? loadGames() : loadNews();
+});
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js");
-load();
+go(tab);
+if (tab === "placar") loadNews();
 </script>
 </body>
 </html>
