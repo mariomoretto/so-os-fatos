@@ -3,5 +3,5 @@ __pycache__/
 .pytest_cache/
 .DS_Store
 .env
-noticias.db
+/noticias.db
 site/
