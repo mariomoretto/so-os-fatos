@@ -52,7 +52,7 @@ def save(con, story: Story) -> None:
             story.headline,
             json.dumps([f.__dict__ for f in story.facts], ensure_ascii=False),
             json.dumps(story.divergences, ensure_ascii=False),
-            json.dumps([{"source": a.source, "title": a.title, "link": a.link} for a in story.articles],
+            json.dumps([{"source": a.source, "title": a.title, "link": a.link, "image": a.image} for a in story.articles],
                        ensure_ascii=False),
             story.created_at.isoformat(timespec="seconds"),
         ),

@@ -10,6 +10,9 @@ from .config import FEEDS, MAX_AGE_HOURS
 from .models import Article
 
 _TAG = re.compile(r"<[^>]+>")
+_IMG = re.compile(r'<img[^>]+src="([^"]+)"', re.I)
+# logos e pixels de rastreamento que alguns feeds colocam no lugar da foto
+_NOT_PHOTO = re.compile(r"logo|ebc\.png|pixel|feedburner|gravatar|1x1|spacer", re.I)
 
 
 def clean(text: str) -> str:
@@ -19,6 +22,19 @@ def clean(text: str) -> str:
 def _published(entry) -> datetime | None:
     t = entry.get("published_parsed") or entry.get("updated_parsed")
     return datetime(*t[:6], tzinfo=timezone.utc) if t else None
+
+
+def image_of(entry) -> str:
+    """Primeira foto da matéria: media:content, anexo de imagem ou <img> no texto."""
+    urls = [m.get("url", "") for m in entry.get("media_content", []) + entry.get("media_thumbnail", [])]
+    urls += [l.get("href", "") for l in entry.get("links", []) if l.get("type", "").startswith("image")]
+    for part in [entry.get("summary", "")] + [c.get("value", "") for c in entry.get("content", [])]:
+        urls += _IMG.findall(part or "")
+    for url in urls:
+        url = html.unescape(url).strip()
+        if url.startswith("http") and not _NOT_PHOTO.search(url):
+            return url.replace("http://", "https://", 1)
+    return ""
 
 
 def fetch_feed(source: str, url: str, category: str) -> list[Article]:
@@ -37,7 +53,7 @@ def fetch_feed(source: str, url: str, category: str) -> list[Article]:
         link = e.get("link", "")
         if not title or not link:
             continue
-        out.append(Article(source, category, title, clean(e.get("summary", ""))[:1500], link, pub))
+        out.append(Article(source, category, title, clean(e.get("summary", ""))[:1500], link, pub, image_of(e)))
     return out
 
 

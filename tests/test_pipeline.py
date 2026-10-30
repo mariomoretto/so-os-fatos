@@ -96,3 +96,12 @@ def test_new_version_of_event_replaces_old(tmp_path):
 def test_free_mode_headline_is_the_most_shared_title():
     assert representative(SELIC).source in {"g1", "Folha", "InfoMoney"}
     assert "Selic" in representative(SELIC).title or "juros" in representative(SELIC).title
+
+
+def test_image_skips_logos_and_tracking_pixels():
+    from app.collect import image_of
+    entry = {"summary": '<img src="https://agenciabrasil.ebc.com.br/ebc.png?id=1&amp;o=rss">'
+                        '<img src="https://x.example/logo-agencia.png"><img src="http://x.example/foto.jpg?a=1&amp;b=2">'}
+    assert image_of(entry) == "https://x.example/foto.jpg?a=1&b=2"
+    assert image_of({"media_content": [{"url": "https://g1.example/f.jpg"}]}) == "https://g1.example/f.jpg"
+    assert image_of({"summary": "sem foto"}) == ""

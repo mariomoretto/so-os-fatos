@@ -12,6 +12,7 @@ class Article:
     summary: str
     link: str
     published: datetime | None = None
+    image: str = ""
 
     @property
     def id(self) -> str:

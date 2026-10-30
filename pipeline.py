@@ -46,11 +46,11 @@ def main(argv: list[str]) -> None:
     con = db.connect()
     novos = 0
     for g in groups:
-        if db.exists(con, [a.link for a in g]):
-            continue
         if not use_ai:
             db.save(con, free_story(g))
             novos += 1
+            continue
+        if db.exists(con, [a.link for a in g]):
             continue
         try:
             story, dropped = extract_story(g)
