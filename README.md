@@ -1,7 +1,11 @@
 # Só os Fatos — protótipo
 
 Agrega notícias de vários veículos, agrupa as que falam do mesmo acontecimento e publica
-somente os fatos confirmados por pelo menos 2 fontes diferentes, sem opinião.
+só o que pelo menos 2 veículos diferentes noticiaram.
+
+- **Modo grátis** (padrão, sem `ANTHROPIC_API_KEY`): mostra cada acontecimento com a manchete de cada veículo.
+- **Modo com IA** (com a chave): o Claude extrai os fatos em linguagem neutra e o código confere as evidências.
+  É pago por uso; o workflow do GitHub não usa a chave, então lá roda sempre grátis.
 
 ## Como funciona
 

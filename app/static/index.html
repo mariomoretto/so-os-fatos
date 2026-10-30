@@ -44,7 +44,9 @@
   .div { background: var(--warn-bg); color: var(--warn); border-radius: 8px; padding: 8px 10px; margin-top: 10px; font-size: 14px; }
   details { margin-top: 10px; font-size: 14px; }
   summary { color: var(--muted); cursor: pointer; }
-  details a { color: var(--accent); display: block; margin-top: 4px; text-decoration: none; }
+  details a, .srcs a { color: var(--accent); display: block; margin-top: 6px; text-decoration: none; }
+  .srcs { font-size: 15px; }
+  .meta .conf { margin: 0; text-transform: none; letter-spacing: 0; }
   .empty { color: var(--muted); text-align: center; padding: 48px 0; }
 </style>
 </head>
@@ -52,7 +54,7 @@
 <header>
   <div class="wrap">
     <div class="top"><h1>Só os Fatos</h1><button id="reload">↻ <span id="when"></span></button></div>
-    <p class="tag">Fatos confirmados por 2 ou mais veículos, sem opinião.</p>
+    <p class="tag">Só o que 2 ou mais veículos noticiaram.</p>
     <nav id="nav"></nav>
   </div>
 </header>
@@ -76,11 +78,14 @@ function card(s) {
     ? `<div class="div"><strong>Divergência entre fontes:</strong> ${s.divergences.map(esc).join("<br>")}</div>` : "";
   const srcs = s.sources.map(a =>
     `<a href="${esc(a.link)}" target="_blank" rel="noopener">${esc(a.source)} — ${esc(a.title)}</a>`).join("");
+  const outlets = new Set(s.sources.map(a => a.source)).size;
+  const body = s.facts.length
+    ? `<ul class="facts">${facts}</ul>${div}<details><summary>Matérias originais (${s.sources.length})</summary>${srcs}</details>`
+    : `<div class="srcs">${srcs}</div>`;
   return `<article>
-    <div class="meta">${esc(labels[s.category] || s.category)} · ${when(s.created_at)}</div>
+    <div class="meta">${esc(labels[s.category] || s.category)} · ${when(s.created_at)} · <span class="conf">✓ ${outlets} veículos</span></div>
     <h2>${esc(s.headline)}</h2>
-    <ul class="facts">${facts}</ul>${div}
-    <details><summary>Matérias originais (${s.sources.length})</summary>${srcs}</details>
+    ${body}
   </article>`;
 }
 

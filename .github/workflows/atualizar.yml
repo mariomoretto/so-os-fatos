@@ -22,8 +22,7 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}
-    env:
-      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+    env:  # sem ANTHROPIC_API_KEY: roda no modo grátis
       NF_DB: data/noticias.db
     steps:
       - uses: actions/checkout@v4

@@ -63,3 +63,11 @@ def cluster(articles: list[Article], threshold: float = CLUSTER_THRESHOLD,
 
     groups.sort(key=lambda g: len({a.source for a in g}), reverse=True)
     return groups
+
+
+def representative(group: list[Article]) -> Article:
+    """A matéria cujo título mais compartilha palavras com os outros títulos do grupo."""
+    words = [{w for w in _norm(a.title).split() if len(w) > 2 and w not in STOPWORDS} for a in group]
+    best = max(range(len(group)),
+               key=lambda i: sum(len(words[i] & w) for j, w in enumerate(words) if j != i))
+    return group[best]

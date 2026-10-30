@@ -1,7 +1,7 @@
 from types import SimpleNamespace
 
 from app import db
-from app.cluster import cluster
+from app.cluster import cluster, representative
 from app.extract import extract_story, quote_in_text, verify, build_prompt
 from tests.fixtures import OUTRO, SELIC
 
@@ -91,3 +91,8 @@ def test_new_version_of_event_replaces_old(tmp_path):
     db.save(con, new)
     rows = db.list_stories(con)
     assert len(rows) == 1 and len(rows[0]["sources"]) == 3
+
+
+def test_free_mode_headline_is_the_most_shared_title():
+    assert representative(SELIC).source in {"g1", "Folha", "InfoMoney"}
+    assert "Selic" in representative(SELIC).title or "juros" in representative(SELIC).title
