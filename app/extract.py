@@ -23,11 +23,13 @@ Regras:
 - Para cada fato, cite como evidência o trecho LITERAL (copiado exatamente, até 25 palavras) de cada
   matéria que o confirma, identificando a matéria pelo id (ex.: A1).
 - Se as matérias discordam em algum dado (número, data, nome), registre em divergências, citando quem diz o quê.
-- Prefira menos fatos bem sustentados a muitos fatos fracos."""
+- Prefira menos fatos bem sustentados a muitos fatos fracos.
+- Responda sempre chamando a ferramenta registrar_fatos."""
 
 TOOL = {
     "name": "registrar_fatos",
     "description": "Registra a manchete neutra, os fatos com evidências e as divergências.",
+    "strict": True,
     "input_schema": {
         "type": "object",
         "properties": {
@@ -47,15 +49,18 @@ TOOL = {
                                     "trecho": {"type": "string"},
                                 },
                                 "required": ["artigo", "trecho"],
+                                "additionalProperties": False,
                             },
                         },
                     },
                     "required": ["fato", "evidencias"],
+                    "additionalProperties": False,
                 },
             },
             "divergencias": {"type": "array", "items": {"type": "string"}},
         },
         "required": ["manchete", "fatos", "divergencias"],
+        "additionalProperties": False,
     },
 }
 
@@ -107,7 +112,7 @@ def call_claude(user_text: str, client=None) -> dict:
         max_tokens=2000,
         system=SYSTEM,
         tools=[TOOL],
-        tool_choice={"type": "tool", "name": "registrar_fatos"},
+        tool_choice={"type": "auto"},
         messages=[{"role": "user", "content": user_text}],
     )
     for block in msg.content:
