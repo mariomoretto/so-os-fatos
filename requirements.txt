@@ -1,0 +1,6 @@
+fastapi
+uvicorn
+feedparser
+anthropic
+scikit-learn
+pytest

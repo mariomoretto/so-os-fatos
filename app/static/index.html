@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Só os Fatos</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Só os Fatos">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#f6f5f1" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#141413" media="(prefers-color-scheme: dark)">
+<style>
+  :root {
+    --bg: #f6f5f1; --card: #ffffff; --ink: #1b1b1a; --muted: #6b6a65;
+    --line: #e4e2db; --accent: #1f5f4a; --warn: #9a5b12; --warn-bg: #fbf3e6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #141413; --card: #1e1e1c; --ink: #ecebe6; --muted: #9c9a92;
+            --line: #2f2e2b; --accent: #6cc4a4; --warn: #e3a95b; --warn-bg: #2a2218; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 16px/1.5 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; }
+  header { position: sticky; top: 0; padding-top: env(safe-area-inset-top); background: var(--bg); border-bottom: 1px solid var(--line); z-index: 1; }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 0 16px; }
+  .top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  h1 { font-size: 20px; margin: 14px 0 2px; letter-spacing: -0.01em; }
+  #reload { border: 0; background: none; color: var(--muted); font: inherit; font-size: 13px; padding: 8px 0 8px 8px; cursor: pointer; }
+  .tag { color: var(--muted); font-size: 13px; margin: 0 0 10px; }
+  nav { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 12px; scrollbar-width: none; }
+  nav button { border: 1px solid var(--line); background: var(--card); color: var(--ink);
+               padding: 6px 14px; border-radius: 999px; font: inherit; font-size: 14px; white-space: nowrap; cursor: pointer; }
+  nav button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  main { padding: 16px 0 calc(48px + env(safe-area-inset-bottom)); }
+  article { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+  .meta { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+  h2 { font-size: 18px; line-height: 1.3; margin: 4px 0 10px; }
+  ul.facts { margin: 0; padding-left: 18px; }
+  ul.facts li { margin-bottom: 6px; }
+  .conf { font-size: 12px; color: var(--accent); margin-left: 4px; white-space: nowrap; }
+  .div { background: var(--warn-bg); color: var(--warn); border-radius: 8px; padding: 8px 10px; margin-top: 10px; font-size: 14px; }
+  details { margin-top: 10px; font-size: 14px; }
+  summary { color: var(--muted); cursor: pointer; }
+  details a { color: var(--accent); display: block; margin-top: 4px; text-decoration: none; }
+  .empty { color: var(--muted); text-align: center; padding: 48px 0; }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="top"><h1>Só os Fatos</h1><button id="reload">↻ <span id="when"></span></button></div>
+    <p class="tag">Fatos confirmados por 2 ou mais veículos, sem opinião.</p>
+    <nav id="nav"></nav>
+  </div>
+</header>
+<main class="wrap" id="list"><p class="empty">Carregando…</p></main>
+
+<script>
+const nav = document.getElementById("nav");
+const list = document.getElementById("list");
+let labels = {};
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+function when(iso) {
+  const d = new Date(iso);
+  return d.toLocaleString("pt-BR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
+}
+
+function card(s) {
+  const facts = s.facts.map(f =>
+    `<li>${esc(f.text)}<span class="conf" title="${esc(f.sources.join(", "))}">✓ ${f.sources.length} fontes</span></li>`).join("");
+  const div = s.divergences.length
+    ? `<div class="div"><strong>Divergência entre fontes:</strong> ${s.divergences.map(esc).join("<br>")}</div>` : "";
+  const srcs = s.sources.map(a =>
+    `<a href="${esc(a.link)}" target="_blank" rel="noopener">${esc(a.source)} — ${esc(a.title)}</a>`).join("");
+  return `<article>
+    <div class="meta">${esc(labels[s.category] || s.category)} · ${when(s.created_at)}</div>
+    <h2>${esc(s.headline)}</h2>
+    <ul class="facts">${facts}</ul>${div}
+    <details><summary>Matérias originais (${s.sources.length})</summary>${srcs}</details>
+  </article>`;
+}
+
+let data = { noticias: [] }, current = "";
+
+function show(cat) {
+  current = cat;
+  [...nav.children].forEach(b => b.setAttribute("aria-pressed", b.dataset.cat === cat));
+  const items = data.noticias.filter(s => !cat || s.category === cat);
+  list.innerHTML = items.length ? items.map(card).join("")
+    : `<p class="empty">Nenhuma notícia confirmada aqui ainda.</p>`;
+}
+
+async function load() {
+  try {
+    data = await (await fetch("noticias.json", { cache: "no-store" })).json();
+  } catch {
+    if (!data.gerado_em) { list.innerHTML = `<p class="empty">Sem conexão.</p>`; return; }
+  }
+  labels = data.categorias;
+  document.getElementById("when").textContent = data.gerado_em ? when(data.gerado_em) : "";
+  const all = { "": "Tudo", ...labels };
+  nav.innerHTML = Object.entries(all).map(([k, v]) => `<button data-cat="${k}">${v}</button>`).join("");
+  show(current);
+}
+
+nav.onclick = e => e.target.dataset.cat !== undefined && show(e.target.dataset.cat);
+document.getElementById("reload").onclick = load;
+document.addEventListener("visibilitychange", () => document.visibilityState === "visible" && load());
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js");
+load();
+</script>
+</body>
+</html>
