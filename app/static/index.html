@@ -92,6 +92,7 @@
   .tile b { display: block; font-size: 19px; font-weight: 800; letter-spacing: -0.01em; margin: 2px 0; }
   .tile .up { color: var(--accent); font-weight: 600; font-size: 13px; }
   .tile .down { color: var(--live); font-weight: 600; font-size: 13px; }
+  .tile small { color: var(--faint); font-size: 12px; }
   .toast { position: fixed; left: 50%; bottom: calc(84px + env(safe-area-inset-bottom)); transform: translateX(-50%);
            background: var(--ink); color: var(--bg); font-size: 13px; font-weight: 600; padding: 8px 14px;
            border-radius: 999px; z-index: 5; opacity: 0; transition: opacity .2s; pointer-events: none; }
@@ -274,7 +275,9 @@ function renderTicker() {
 }
 
 function marketCard() {
-  const tile = (label, x, fmt) => x ? `<div class="tile"><span>${label}</span><b>${fmt(x.v)}</b>${pctHtml(x.p)}</div>` : "";
+  const tile = (label, x, fmt) => x ? `<div class="tile"><span>${label}</span><b>${fmt(x.v)}</b>${pctHtml(x.p)}<small> · ${hhmm(x.t)}</small></div>` : "";
+  const ib = news?.ibovespa;
+  market.ibov = ib && { v: ib.pontos, p: ib.variacao, t: new Date(ib.em) };
   const tiles = [
     tile("Dólar", market.usd, v => `R$ ${brl(v)}`),
     tile("Euro", market.eur, v => `R$ ${brl(v)}`),
@@ -282,23 +285,20 @@ function marketCard() {
     tile("Ibovespa", market.ibov, v => `${brl(v, 0)} pts`),
   ].join("");
   if (!tiles) return "";
-  const at = market.usd ? `dólar às ${hhmm(market.usd.t)}` : "";
-  return `<section class="market"><h3>Mercado <small>${at}</small></h3><div class="tiles">${tiles}</div></section>`;
+  return `<section class="market"><h3>Mercado</h3><div class="tiles">${tiles}</div></section>`;
 }
 
 async function loadMarket() {
   clearTimeout(quoteTimer);
-  quoteTimer = setTimeout(loadMarket, 5 * 60000);
-  const [aw, hg] = await Promise.all([
-    // dólar, euro e bitcoin: AwesomeAPI; Ibovespa: HG Brasil (ambas grátis, direto do aparelho)
-    fetch("https://economia.awesomeapi.com.br/json/last/USD-BRL,EUR-BRL,BTC-BRL").then(r => r.json()).catch(() => null),
-    fetch("https://api.hgbrasil.com/finance?format=json-cors").then(r => r.json()).catch(() => null),
-  ]);
+  // a cada 5 min: cotações e o noticias.json (que traz o Ibovespa)
+  quoteTimer = setTimeout(() => { loadMarket(); if (tab === "noticias") loadNews(); }, 5 * 60000);
+  // dólar, euro e bitcoin: AwesomeAPI, direto do aparelho. O Ibovespa vem no noticias.json (ver build_site.py).
+  const aw = await fetch("https://economia.awesomeapi.com.br/json/last/USD-BRL,EUR-BRL,BTC-BRL")
+    .then(r => r.json()).catch(() => null);
   const pair = q => q && { v: Number(q.bid), p: Number(q.pctChange), t: new Date(q.timestamp * 1000) };
   if (aw) Object.assign(market, { usd: pair(aw.USDBRL), eur: pair(aw.EURBRL), btc: pair(aw.BTCBRL) });
-  const ibov = hg?.results?.stocks?.IBOVESPA;
-  if (ibov) market.ibov = { v: ibov.points, p: ibov.variation };
   renderTicker();
+  if (tab === "noticias" && cat === "economia" && news) showNews();
   if (tab === "noticias" && cat === "economia" && news) showNews();
 }
 
