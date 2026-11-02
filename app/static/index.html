@@ -104,7 +104,7 @@
                   font-size: 14px; font-weight: 500; white-space: nowrap; cursor: pointer; transition: all .15s; }
   .chips button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
 
-  main { padding: 16px 0 calc(96px + env(safe-area-inset-bottom)); }
+  main.wrap { padding-top: 16px; padding-bottom: calc(96px + env(safe-area-inset-bottom)); }  /* .wrap zerava o espaço da barra de abas */
 
   /* notícias */
   .story { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 18px;
