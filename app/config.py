@@ -26,11 +26,6 @@ FEEDS = {
         ("Olhar Digital", "https://olhardigital.com.br/feed/"),
         ("Canaltech", "https://canaltech.com.br/rss/"),
     ],
-    "games": [
-        ("Voxel", "https://www.tecmundo.com.br/voxel/rss"),
-        ("IGN Brasil", "https://br.ign.com/feed.xml"),
-        ("The Enemy", "https://www.theenemy.com.br/rss"),
-    ],
 }
 
 CATEGORY_LABELS = {
@@ -38,7 +33,6 @@ CATEGORY_LABELS = {
     "economia": "Economia",
     "esportes": "Esportes",
     "tecnologia": "Tecnologia",
-    "games": "Games",
 }
 
 MODEL = os.getenv("NF_MODEL", "claude-sonnet-5-5")

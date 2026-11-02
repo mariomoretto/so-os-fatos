@@ -176,6 +176,59 @@
   .tabs button[aria-pressed="true"] { color: var(--ink); }
   .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--live); display: none; position: relative; top: -26px; left: 14px; margin-bottom: -6px; }
   .dot.on { display: block; }
+  .chips[hidden] { display: none; }
+
+  /* voltar ao topo */
+  .totop { position: fixed; right: 16px; bottom: calc(80px + env(safe-area-inset-bottom)); z-index: 3;
+           width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; cursor: pointer;
+           border: 1px solid var(--line); background: color-mix(in srgb, var(--card) 90%, transparent);
+           backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); color: var(--muted);
+           box-shadow: 0 2px 10px rgba(0,0,0,.08); opacity: 0; transform: translateY(8px);
+           transition: opacity .2s, transform .2s; pointer-events: none; }
+  .totop.on { opacity: 1; transform: none; pointer-events: auto; }
+  .totop svg { width: 18px; height: 18px; }
+
+  /* tempo */
+  .wnow { text-align: center; padding: 8px 0 18px; animation: up .25s ease both; }
+  .place { border: 0; background: var(--chip); border-radius: 999px; padding: 6px 12px; font-size: 14px; font-weight: 600; cursor: pointer; }
+  .place u { color: var(--muted); font-weight: 500; text-decoration: none; margin-left: 4px; }
+  .wbig { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 12px 0 2px; }
+  .wbig i { font-style: normal; font-size: 64px; line-height: 1; }
+  .wbig b { font-size: 76px; font-weight: 800; letter-spacing: -0.05em; line-height: 1; }
+  .wtext { color: var(--muted); font-size: 15px; }
+  .wstats { display: flex; justify-content: center; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+  .wstats span { background: var(--chip); border-radius: 12px; padding: 6px 12px; font-size: 13px; color: var(--muted); }
+  .wstats b { color: var(--ink); }
+  .wcard { background: var(--card); border: 1px solid var(--line); border-radius: 18px; box-shadow: var(--shadow);
+           padding: 14px 16px; margin-bottom: 14px; animation: up .25s ease both; }
+  .wcard h3 { font-size: 13px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin: 0 0 10px; }
+  .hours { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; margin: 0 -6px; }
+  .hours::-webkit-scrollbar { display: none; }
+  .hour { flex: none; width: 54px; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 4px 0; font-size: 13px; }
+  .hour span { color: var(--muted); }
+  .hour i { font-style: normal; font-size: 22px; }
+  .hour b { font-size: 15px; }
+  .hour small { color: var(--c-tecnologia); font-size: 11.5px; font-weight: 600; min-height: 14px; }
+  .day { display: grid; grid-template-columns: 64px 28px 1fr 34px 1.4fr 34px; align-items: center; gap: 6px;
+         padding: 9px 0; border-top: 1px solid var(--line); font-size: 15px; font-variant-numeric: tabular-nums; }
+  .day:first-of-type { border-top: 0; }
+  .day span { font-weight: 600; text-transform: capitalize; }
+  .day i { font-style: normal; font-size: 20px; }
+  .day small { color: var(--c-tecnologia); font-size: 12px; font-weight: 600; }
+  .day em { font-style: normal; color: var(--muted); text-align: right; }
+  .day b { text-align: right; }
+  .bar { position: relative; height: 5px; border-radius: 3px; background: var(--chip); }
+  .bar div { position: absolute; top: 0; bottom: 0; border-radius: 3px; background: linear-gradient(90deg, #4dabf7, #fcc419, #ff6b6b); }
+  .picker { text-align: center; padding: 20px 16px; }
+  .picker .primary { width: 100%; border: 0; border-radius: 12px; padding: 12px; font-weight: 700; cursor: pointer;
+                     background: var(--accent); color: var(--bg); }
+  .picker .or { color: var(--muted); font-size: 13px; margin: 14px 0 8px; }
+  .picker input { width: 100%; font: inherit; color: var(--ink); background: var(--chip); border: 1px solid var(--line);
+                  border-radius: 12px; padding: 11px 12px; outline: none; }
+  .picker input:focus { border-color: var(--accent); }
+  .result { display: block; width: 100%; text-align: left; border: 0; border-bottom: 1px solid var(--line);
+            background: none; padding: 11px 4px; cursor: pointer; }
+  .result small { color: var(--muted); margin-left: 6px; }
 </style>
 </head>
 <body>
@@ -217,7 +270,14 @@
     Placar
     <i class="dot" id="livedot"></i>
   </button>
+  <button data-tab="tempo">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v1.5M3.5 8H2M4.8 4.8l1 1M12.5 9.2A4 4 0 1 0 6 12"/><path d="M8 20h9.5a3.5 3.5 0 1 0-1-6.86A5 5 0 0 0 7 14.5 2.75 2.75 0 0 0 8 20Z"/></svg>
+    Tempo
+  </button>
 </nav>
+<button class="totop" id="totop" aria-label="Voltar ao topo">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+</button>
 
 <script>
 const $ = id => document.getElementById(id);
@@ -252,8 +312,9 @@ $("theme").onclick = () => {
 };
 
 function setChips(items, active, onPick) {
+  chips.hidden = !items.length;
   chips.innerHTML = items.map(([k, v]) => `<button data-k="${k}" aria-pressed="${k === active}">${v}</button>`).join("");
-  chips.onclick = e => { const k = e.target.dataset.k; if (k !== undefined) onPick(k); };
+  chips.onclick = e => { const k = e.target.dataset.k; if (k !== undefined) { onPick(k); window.scrollTo(0, 0); } };
 }
 
 function skeleton() { list.innerHTML = '<div class="skel"></div>'.repeat(3); }
@@ -338,9 +399,15 @@ function showNews() {
 }
 
 async function loadNews() {
-  if (!news) skeleton();
-  try { news = await (await fetch("noticias.json", { cache: "no-store" })).json(); }
-  catch { if (!news) { list.innerHTML = `<p class="empty">Sem conexão.</p>`; return; } }
+  if (!news) {
+    try { news = JSON.parse(localStorage.getItem("noticias")); } catch {}
+    if (news && tab === "noticias") showNews(); else if (tab === "noticias") skeleton();
+  }
+  try {
+    const text = await (await fetch("noticias.json", { cache: "no-store" })).text();
+    news = JSON.parse(text);
+    try { localStorage.setItem("noticias", text); } catch {}
+  } catch { if (!news) { list.innerHTML = `<p class="empty">Sem conexão.</p>`; return; } }
   if (tab === "noticias") showNews();
 }
 
@@ -418,34 +485,152 @@ async function loadGames() {
   if (live || day === "0") timer = setTimeout(loadGames, live ? 30000 : 120000);
 }
 
+/* ---------- Tempo (Open-Meteo, direto do aparelho) ---------- */
+const WMO = {
+  0: ["Céu limpo", "☀️", "🌙"], 1: ["Poucas nuvens", "🌤️", "🌙"], 2: ["Parcialmente nublado", "⛅", "☁️"], 3: ["Nublado", "☁️"],
+  45: ["Neblina", "🌫️"], 48: ["Neblina", "🌫️"], 51: ["Garoa fraca", "🌦️"], 53: ["Garoa", "🌦️"], 55: ["Garoa forte", "🌧️"],
+  56: ["Garoa congelante", "🌧️"], 57: ["Garoa congelante", "🌧️"], 61: ["Chuva fraca", "🌦️"], 63: ["Chuva", "🌧️"],
+  65: ["Chuva forte", "🌧️"], 66: ["Chuva congelante", "🌧️"], 67: ["Chuva congelante", "🌧️"], 71: ["Neve fraca", "🌨️"],
+  73: ["Neve", "🌨️"], 75: ["Neve forte", "❄️"], 77: ["Neve", "🌨️"], 80: ["Pancadas de chuva", "🌦️"],
+  81: ["Pancadas de chuva", "🌧️"], 82: ["Temporal", "⛈️"], 85: ["Neve", "🌨️"], 86: ["Neve forte", "❄️"],
+  95: ["Trovoadas", "⛈️"], 96: ["Trovoadas com granizo", "⛈️"], 99: ["Trovoadas com granizo", "⛈️"],
+};
+const wmo = (code, day = 1) => { const w = WMO[code] || ["—", "🌡️"]; return { text: w[0], icon: !day && w[2] ? w[2] : w[1] }; };
+const rain = p => p >= 20 ? `${p}%` : "";
+let place = JSON.parse(localStorage.getItem("local") || "null"), weather = null;
+
+function setPlace(p) {
+  place = p;
+  localStorage.setItem("local", JSON.stringify(p));
+  weather = null;
+  loadWeather();
+}
+
+function showPlacePicker() {
+  setChips([], "", () => {});
+  setSub("escolha a cidade da previsão");
+  list.innerHTML = `<section class="wcard picker">
+    <button class="primary" id="geo">📍 Usar minha localização</button>
+    <div class="or">ou procure a cidade</div>
+    <input id="city" type="search" placeholder="Ex.: Itaju, Bauru, São Paulo" autocomplete="off" enterkeyhint="search">
+    <div id="results"></div>
+  </section>`;
+  $("geo").onclick = () => {
+    $("geo").textContent = "Localizando…";
+    navigator.geolocation.getCurrentPosition(async pos => {
+      const { latitude: lat, longitude: lon } = pos.coords;
+      let name = "Minha localização";
+      try {
+        const r = await (await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=pt`)).json();
+        name = r.locality || r.city || name;
+      } catch {}
+      setPlace({ name, lat, lon });
+    }, () => { $("geo").textContent = "Não deu para localizar. Procure a cidade abaixo."; }, { timeout: 10000 });
+  };
+  let wait;
+  $("city").oninput = e => { clearTimeout(wait); wait = setTimeout(() => searchCity(e.target.value), 350); };
+}
+
+async function searchCity(q) {
+  if (q.trim().length < 2) { $("results").innerHTML = ""; return; }
+  let found = [];
+  try {
+    found = (await (await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=6&language=pt`)).json()).results || [];
+  } catch {}
+  $("results").innerHTML = found.length ? found.map((c, i) =>
+    `<button class="result" data-i="${i}">${esc(c.name)}<small>${esc([c.admin1, c.country].filter(Boolean).join(", "))}</small></button>`).join("")
+    : `<p class="empty" style="padding:16px 0">Nenhuma cidade encontrada.</p>`;
+  $("results").onclick = e => {
+    const b = e.target.closest(".result");
+    if (b) { const c = found[b.dataset.i]; setPlace({ name: c.name, lat: c.latitude, lon: c.longitude }); }
+  };
+}
+
+function showWeather() {
+  setChips([], "", () => {});
+  const c = weather.current, d = weather.daily, h = weather.hourly, now = wmo(c.weather_code, c.is_day);
+  const start = Math.max(0, h.time.findIndex(t => t >= c.time.slice(0, 13)));
+  const hours = h.time.slice(start, start + 24).map((t, i) => {
+    const k = start + i, w = wmo(h.weather_code[k], h.is_day[k]);
+    return `<div class="hour"><span>${i ? t.slice(11, 13) + "h" : "Agora"}</span><i>${w.icon}</i>
+      <b>${Math.round(h.temperature_2m[k])}°</b><small>${rain(h.precipitation_probability[k])}</small></div>`;
+  }).join("");
+  const lo = Math.min(...d.temperature_2m_min), span = Math.max(...d.temperature_2m_max) - lo || 1;
+  const days = d.time.map((t, i) => {
+    const name = i === 0 ? "Hoje" : i === 1 ? "Amanhã"
+      : new Date(t + "T12:00").toLocaleDateString("pt-BR", { weekday: "short" }).replace(".", "");
+    const a = (d.temperature_2m_min[i] - lo) / span * 100, b = (d.temperature_2m_max[i] - lo) / span * 100;
+    return `<div class="day"><span>${name}</span><i>${wmo(d.weather_code[i]).icon}</i>
+      <small>${rain(d.precipitation_probability_max[i]) && "💧" + rain(d.precipitation_probability_max[i])}</small>
+      <em>${Math.round(d.temperature_2m_min[i])}°</em><div class="bar"><div style="left:${a}%;right:${100 - b}%"></div></div>
+      <b>${Math.round(d.temperature_2m_max[i])}°</b></div>`;
+  }).join("");
+  list.innerHTML = `<section class="wnow">
+      <button class="place" id="place">📍 ${esc(place.name)}<u>trocar</u></button>
+      <div class="wbig"><i>${now.icon}</i><b>${Math.round(c.temperature_2m)}°</b></div>
+      <div class="wtext">${now.text} · máx ${Math.round(d.temperature_2m_max[0])}° · mín ${Math.round(d.temperature_2m_min[0])}°</div>
+      <div class="wstats"><span>Sensação <b>${Math.round(c.apparent_temperature)}°</b></span>
+        <span>Umidade <b>${c.relative_humidity_2m}%</b></span><span>Vento <b>${Math.round(c.wind_speed_10m)} km/h</b></span></div>
+    </section>
+    <section class="wcard"><h3>Próximas 24 horas</h3><div class="hours">${hours}</div></section>
+    <section class="wcard"><h3>Próximos 7 dias</h3>${days}</section>`;
+  $("place").onclick = showPlacePicker;
+  setSub(`previsão às ${hhmm(new Date())}`);
+}
+
+async function loadWeather() {
+  if (tab !== "tempo") return;
+  clearTimeout(timer);
+  if (!place) return showPlacePicker();
+  if (!weather) skeleton();
+  const q = `latitude=${place.lat}&longitude=${place.lon}&timezone=auto&forecast_days=7`
+    + "&current=temperature_2m,apparent_temperature,weather_code,is_day,relative_humidity_2m,wind_speed_10m"
+    + "&hourly=temperature_2m,weather_code,precipitation_probability,is_day"
+    + "&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max";
+  try { weather = await (await fetch(`https://api.open-meteo.com/v1/forecast?${q}`)).json(); }
+  catch { if (!weather) list.innerHTML = `<p class="empty">Sem conexão.</p>`; return; }
+  if (tab !== "tempo") return;
+  showWeather();
+  timer = setTimeout(loadWeather, 15 * 60000);
+}
+
 /* ---------- Abas ---------- */
-let tab = location.hash === "#placar" ? "placar" : "noticias";
+const TABS = ["noticias", "placar", "tempo"];
+let tab = TABS.includes(location.hash.slice(1)) ? location.hash.slice(1) : "noticias";
+history.scrollRestoration = "manual";
 
 function go(t) {
   tab = t;
-  history.replaceState(null, "", t === "placar" ? "#placar" : location.pathname);
+  history.replaceState(null, "", t === "noticias" ? location.pathname : "#" + t);
   document.querySelectorAll(".tabs button").forEach(b => b.setAttribute("aria-pressed", b.dataset.tab === t));
   clearTimeout(timer);
   window.scrollTo(0, 0);
-  if (t === "placar") { games = {}; loadGames(); } else if (news) showNews(); else loadNews();
+  if (t === "placar") { games = {}; loadGames(); }
+  else if (t === "tempo") loadWeather();
+  else if (news) showNews(); else loadNews();
 }
 
 document.querySelector(".tabs").onclick = e => { const b = e.target.closest("button"); if (b) go(b.dataset.tab); };
 $("reload").onclick = async () => {
   $("reload").classList.add("spin");
   loadMarket();
-  await (tab === "placar" ? loadGames() : loadNews());
+  await ({ placar: loadGames, tempo: loadWeather, noticias: loadNews })[tab]();
   $("reload").classList.remove("spin");
 };
+let hiddenAt = 0;
 document.addEventListener("visibilitychange", () => {
-  if (document.visibilityState !== "visible") return clearTimeout(timer);
+  if (document.visibilityState !== "visible") { hiddenAt = Date.now(); return clearTimeout(timer); }
+  if (Date.now() - hiddenAt > 60000) window.scrollTo(0, 0);  // voltou ao app depois de um tempo: começa do topo
   loadMarket();
-  tab === "placar" ? loadGames() : loadNews();
+  ({ placar: loadGames, tempo: loadWeather, noticias: loadNews })[tab]();
 });
+const totop = $("totop");
+addEventListener("scroll", () => totop.classList.toggle("on", scrollY > 700), { passive: true });
+totop.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js");
 go(tab);
 loadMarket();
-if (tab === "placar") loadNews();
+if (tab !== "noticias") loadNews();
 </script>
 </body>
 </html>

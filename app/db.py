@@ -80,6 +80,19 @@ def list_stories(con, category: str | None = None, limit: int = 50) -> list[dict
     return out
 
 
+def restore(con, stories: list[dict]) -> int:
+    """Recarrega notícias de um noticias.json (o formato de list_stories)."""
+    for s in stories:
+        con.execute(
+            "INSERT OR REPLACE INTO stories VALUES (?,?,?,?,?,?,?)",
+            (group_key([a["link"] for a in s["sources"]]), s["category"], s["headline"],
+             json.dumps(s["facts"], ensure_ascii=False), json.dumps(s["divergences"], ensure_ascii=False),
+             json.dumps(s["sources"], ensure_ascii=False), s["created_at"]),
+        )
+    con.commit()
+    return len(stories)
+
+
 def prune(con, days: int = 7) -> None:
     cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat(timespec="seconds")
     con.execute("DELETE FROM stories WHERE created_at < ?", (cutoff,))
@@ -91,5 +104,5 @@ def snapshot(con) -> dict:
     return {
         "gerado_em": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "categorias": CATEGORY_LABELS,
-        "noticias": list_stories(con, limit=300),
+        "noticias": [s for s in list_stories(con, limit=300) if s["category"] in CATEGORY_LABELS],
     }

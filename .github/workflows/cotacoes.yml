@@ -3,7 +3,7 @@ name: Atualizar Ibovespa
 # Só republica o site com o Ibovespa novo (sem coletar notícias). Pregão: seg–sex, ~10h–18h de Brasília.
 on:
   schedule:
-    - cron: "*/20 13-21 * * 1-5"
+    - cron: "3,23,43 13-21 * * 1-5"
   workflow_dispatch:
 
 permissions:
@@ -28,8 +28,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Conferir banco de notícias
-        run: test -s data/noticias.db || (echo "data/noticias.db não está no repositório; nada publicado." && exit 1)
+      - run: python restore.py --obrigatorio
       - run: python build_site.py
       - uses: actions/upload-pages-artifact@v3
         with:
