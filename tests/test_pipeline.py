@@ -105,3 +105,12 @@ def test_image_skips_logos_and_tracking_pixels():
     assert image_of(entry) == "https://x.example/foto.jpg?a=1&b=2"
     assert image_of({"media_content": [{"url": "https://g1.example/f.jpg"}]}) == "https://g1.example/f.jpg"
     assert image_of({"summary": "sem foto"}) == ""
+
+
+def test_quote_tolerance_is_off_by_default_and_still_blocks_invented_text():
+    text = SELIC[0].text
+    near = "Comitê de Política Monetária do Banco Central decidiu manter a taxa de juros em 15% ao ano"
+    assert not quote_in_text(near, text)              # padrão: só cópia exata
+    assert quote_in_text(near, text, 0.85)            # quase igual: passa com tolerância
+    invented = "o Banco Central decidiu cortar a taxa básica para 12% ao ano em dezembro"
+    assert not quote_in_text(invented, text, 0.85)    # inventado: continua barrado

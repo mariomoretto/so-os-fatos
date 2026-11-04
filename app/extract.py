@@ -9,8 +9,9 @@ import json
 import re
 import unicodedata
 import urllib.request
+from difflib import SequenceMatcher
 
-from .config import LOCAL_MODEL, MIN_SOURCES, MODEL, OLLAMA_URL
+from .config import LOCAL_MODEL, MIN_SOURCES, MODEL, OLLAMA_URL, QUOTE_MATCH
 from .models import Article, Fact, Story
 
 SYSTEM = """Você é um checador de fatos. Recebe várias matérias de veículos diferentes sobre o mesmo acontecimento.
@@ -74,9 +75,23 @@ def _norm(text: str) -> str:
     return re.sub(r"\s+", " ", text).strip()
 
 
-def quote_in_text(quote: str, text: str) -> bool:
+def quote_score(quote: str, text: str) -> float:
+    """Fração das palavras do trecho que aparecem na matéria, na ordem, em sequências de 2+ palavras."""
+    qw, tw = _norm(quote).strip(" .…").split(), _norm(text).split()
+    if not qw:
+        return 0.0
+    blocks = SequenceMatcher(None, qw, tw, autojunk=False).get_matching_blocks()
+    return sum(b.size for b in blocks if b.size >= 2) / len(qw)
+
+
+def quote_in_text(quote: str, text: str, min_ratio: float = QUOTE_MATCH) -> bool:
     q = _norm(quote).strip(" .…")
-    return len(q) >= 8 and q in _norm(text)
+    if len(q) < 8:
+        return False
+    if q in _norm(text):
+        return True
+    # tolerância opcional para modelos que reescrevem um pouco o trecho em vez de copiar
+    return min_ratio < 1 and len(q.split()) >= 5 and quote_score(quote, text) >= min_ratio
 
 
 def build_prompt(articles: list[Article]) -> tuple[str, dict[str, Article]]:
@@ -85,7 +100,8 @@ def build_prompt(articles: list[Article]) -> tuple[str, dict[str, Article]]:
     return "\n\n".join(parts), ids
 
 
-def verify(raw: dict, ids: dict[str, Article], min_sources: int = MIN_SOURCES) -> tuple[list[Fact], int]:
+def verify(raw: dict, ids: dict[str, Article], min_sources: int = MIN_SOURCES,
+           min_ratio: float = QUOTE_MATCH) -> tuple[list[Fact], int]:
     """Mantém só fatos cujas evidências existem literalmente e vêm de fontes distintas suficientes.
 
     Retorna (fatos aprovados, quantidade descartada).
@@ -95,7 +111,7 @@ def verify(raw: dict, ids: dict[str, Article], min_sources: int = MIN_SOURCES) -
         sources, links = [], []
         for ev in f.get("evidencias", []):
             art = ids.get(ev.get("artigo", "").strip())
-            if art and quote_in_text(ev.get("trecho", ""), art.text) and art.source not in sources:
+            if art and quote_in_text(ev.get("trecho", ""), art.text, min_ratio) and art.source not in sources:
                 sources.append(art.source)
                 links.append(art.link)
         if len(sources) >= min_sources and f.get("fato", "").strip():

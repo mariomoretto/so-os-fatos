@@ -38,6 +38,8 @@ CATEGORY_LABELS = {
 MODEL = os.getenv("NF_MODEL", "claude-sonnet-5-5")
 # Modelo pequeno e grátis rodando via Ollama (ex.: "qwen3:4b"). Se definido, é usado no lugar do Claude.
 LOCAL_MODEL = os.getenv("NF_MODELO_LOCAL", "")
+# Fração mínima das palavras do trecho citado que precisa aparecer na matéria (1 = cópia exata).
+QUOTE_MATCH = float(os.getenv("NF_TRECHO_MINIMO", "1"))
 OLLAMA_URL = os.getenv("NF_OLLAMA_URL", "http://localhost:11434/api/chat")
 DB_PATH = os.getenv("NF_DB", "noticias.db")
 
