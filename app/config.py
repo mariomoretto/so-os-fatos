@@ -36,6 +36,9 @@ CATEGORY_LABELS = {
 }
 
 MODEL = os.getenv("NF_MODEL", "claude-sonnet-5-5")
+# Modelo pequeno e grátis rodando via Ollama (ex.: "qwen3:4b"). Se definido, é usado no lugar do Claude.
+LOCAL_MODEL = os.getenv("NF_MODELO_LOCAL", "")
+OLLAMA_URL = os.getenv("NF_OLLAMA_URL", "http://localhost:11434/api/chat")
 DB_PATH = os.getenv("NF_DB", "noticias.db")
 
 # Similaridade mínima (0–1) para duas matérias serem consideradas o mesmo acontecimento.

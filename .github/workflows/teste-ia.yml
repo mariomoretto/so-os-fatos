@@ -1,0 +1,46 @@
+name: Teste IA grátis
+
+on:
+  workflow_dispatch:
+    inputs:
+      quantidade:
+        description: "Quantos acontecimentos resumir"
+        default: "6"
+
+permissions:
+  contents: read
+
+env:
+  OLLAMA_VERSION: v0.40.14
+
+jobs:
+  testar:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        modelo: ["qwen3:4b", "gemma3:4b"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Instalar Ollama (binário oficial, versão fixa)
+        run: |
+          mkdir -p "$HOME/ollama"
+          curl -fsSL -o /tmp/ollama.tar.zst \
+            "https://github.com/ollama/ollama/releases/download/${OLLAMA_VERSION}/ollama-linux-amd64.tar.zst"
+          tar --zstd -xf /tmp/ollama.tar.zst -C "$HOME/ollama"
+          echo "$HOME/ollama/bin" >> "$GITHUB_PATH"
+      - name: Iniciar Ollama e baixar o modelo
+        run: |
+          (ollama serve > /tmp/ollama.log 2>&1 &)
+          sleep 5
+          ollama pull ${{ matrix.modelo }}
+          echo "CPUs: $(nproc)"; free -h | head -2
+      - name: Resumir notícias
+        env:
+          NF_MODELO_LOCAL: ${{ matrix.modelo }}
+        run: python testar_ia.py ${{ inputs.quantidade }}

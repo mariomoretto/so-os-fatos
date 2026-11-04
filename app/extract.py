@@ -5,10 +5,12 @@ Depois o código confere se esses trechos existem mesmo no texto das matérias. 
 evidência não bate, ou que não tenha ao menos MIN_SOURCES fontes confirmadas, é descartado.
 """
 from __future__ import annotations
+import json
 import re
 import unicodedata
+import urllib.request
 
-from .config import MIN_SOURCES, MODEL
+from .config import LOCAL_MODEL, MIN_SOURCES, MODEL, OLLAMA_URL
 from .models import Article, Fact, Story
 
 SYSTEM = """Você é um checador de fatos. Recebe várias matérias de veículos diferentes sobre o mesmo acontecimento.
@@ -121,9 +123,27 @@ def call_claude(user_text: str, client=None) -> dict:
     raise RuntimeError("Modelo não retornou a ferramenta esperada")
 
 
+def call_local(user_text: str) -> dict:
+    """Modelo pequeno via Ollama. O formato da resposta é forçado pelo mesmo schema da ferramenta."""
+    body = {
+        "model": LOCAL_MODEL, "stream": False, "format": TOOL["input_schema"],
+        "options": {"temperature": 0, "num_ctx": 8192},
+        "messages": [
+            {"role": "system", "content": SYSTEM.replace("Responda sempre chamando a ferramenta registrar_fatos.",
+                                                         "Responda apenas com o JSON pedido.")},
+            {"role": "user", "content": user_text},
+        ],
+    }
+    if LOCAL_MODEL.startswith("qwen3"):
+        body["think"] = False  # sem "raciocínio" longo: bem mais rápido
+    req = urllib.request.Request(OLLAMA_URL, json.dumps(body).encode(), {"Content-Type": "application/json"})
+    with urllib.request.urlopen(req, timeout=900) as r:
+        return json.loads(json.load(r)["message"]["content"])
+
+
 def extract_story(articles: list[Article], client=None) -> tuple[Story | None, int]:
     text, ids = build_prompt(articles)
-    raw = call_claude(text, client)
+    raw = call_local(text) if LOCAL_MODEL and client is None else call_claude(text, client)
     facts, dropped = verify(raw, ids)
     if not facts:
         return None, dropped
