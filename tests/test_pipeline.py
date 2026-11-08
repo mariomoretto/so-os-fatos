@@ -114,3 +114,15 @@ def test_quote_tolerance_is_off_by_default_and_still_blocks_invented_text():
     assert quote_in_text(near, text, 0.85)            # quase igual: passa com tolerância
     invented = "o Banco Central decidiu cortar a taxa básica para 12% ao ano em dezembro"
     assert not quote_in_text(invented, text, 0.85)    # inventado: continua barrado
+
+
+def test_cross_check_needs_same_numbers_and_names_in_another_outlet():
+    _, ids = build_prompt(SELIC)
+    one_source = {"fatos": [{"fato": "O Copom manteve a Selic em 15% ao ano.", "evidencias": [
+        {"artigo": "A1", "trecho": "manter a taxa básica de juros em 15% ao ano"}]}]}
+    assert verify(one_source, ids, cross=False)[0] == []                       # desligado: precisa de 2 trechos
+    facts, _ = verify(one_source, ids, cross=True)
+    assert facts and facts[0].sources[0] == "g1" and len(facts[0].sources) == 2  # Folha/InfoMoney trazem Copom, Selic e 15
+    wrong = {"fatos": [{"fato": "O Copom manteve a Selic em 14% ao ano.", "evidencias": [
+        {"artigo": "A1", "trecho": "manter a taxa básica de juros em 15% ao ano"}]}]}
+    assert verify(wrong, ids, cross=True)[0] == []                             # número que não está nas matérias

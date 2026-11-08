@@ -25,7 +25,7 @@ def closest(quote: str, text: str) -> str:
 n = int(sys.argv[1]) if len(sys.argv) > 1 else 5
 groups = cluster(collect())[:n]
 print(f"\nModelo: {LOCAL_MODEL} | {len(groups)} acontecimentos | tolerância {TOL}\n")
-start, with_exact, with_tol = time.time(), 0, 0
+start, with_exact, with_tol, with_cross = time.time(), 0, 0, 0
 for g in groups:
     t = time.time()
     text, ids = build_prompt(g)
@@ -49,10 +49,17 @@ for g in groups:
             print(f"       {mark} {ev['artigo']} ({art.source}) nota {quote_score(quote, art.text):.2f}: \"{quote}\"")
             if mark != "✓":
                 print(f"           matéria: \"{closest(quote, art.text)}\"")
-    exact, _ = verify(raw, ids, min_ratio=1)
-    tol, _ = verify(raw, ids, min_ratio=TOL)
+    exact, _ = verify(raw, ids, min_ratio=1, cross=False)
+    tol, _ = verify(raw, ids, min_ratio=TOL, cross=False)
+    cross, _ = verify(raw, ids, min_ratio=TOL, cross=True)
+    for f in cross:
+        if f.text not in {x.text for x in tol}:
+            print(f"   + CRUZAMENTO aprovou: {f.text}  ({', '.join(f.sources)})")
     with_exact += bool(exact)
     with_tol += bool(tol)
-    print(f"  => fatos aprovados: {len(exact)} exatos | {len(tol)} com tolerância | {time.time() - t:.0f}s\n")
-print(f"RESUMO: acontecimentos com resumo: {with_exact}/{len(groups)} só exato | {with_tol}/{len(groups)} com tolerância")
+    with_cross += bool(cross)
+    print(f"  => fatos aprovados: {len(exact)} exatos | {len(tol)} com tolerância | {len(cross)} com cruzamento"
+          f" | {time.time() - t:.0f}s\n")
+print(f"RESUMO: acontecimentos com resumo: {with_exact}/{len(groups)} só exato | {with_tol}/{len(groups)} com tolerância"
+      f" | {with_cross}/{len(groups)} com tolerância + cruzamento")
 print(f"Tempo total: {time.time() - start:.0f}s")

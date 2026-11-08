@@ -11,7 +11,7 @@ import unicodedata
 import urllib.request
 from difflib import SequenceMatcher
 
-from .config import LOCAL_MODEL, MIN_SOURCES, MODEL, OLLAMA_URL, QUOTE_MATCH
+from .config import CROSS_CHECK, LOCAL_MODEL, MIN_SOURCES, MODEL, OLLAMA_URL, QUOTE_MATCH
 from .models import Article, Fact, Story
 
 SYSTEM = """Você é um checador de fatos. Recebe várias matérias de veículos diferentes sobre o mesmo acontecimento.
@@ -25,6 +25,8 @@ Regras:
 - Escreva cada fato em português, frase curta, com suas próprias palavras.
 - Para cada fato, cite como evidência o trecho LITERAL (copiado exatamente, até 25 palavras) de cada
   matéria que o confirma, identificando a matéria pelo id (ex.: A1).
+- Cada fato precisa ser confirmado por matérias de PELO MENOS DOIS veículos diferentes (veja "Fonte"):
+  cite um trecho de cada um. Se a informação aparece em um veículo só, deixe o fato de fora.
 - Se as matérias discordam em algum dado (número, data, nome), registre em divergências, citando quem diz o quê.
 - Prefira menos fatos bem sustentados a muitos fatos fracos.
 - Responda sempre chamando a ferramenta registrar_fatos."""
@@ -94,6 +96,33 @@ def quote_in_text(quote: str, text: str, min_ratio: float = QUOTE_MATCH) -> bool
     return min_ratio < 1 and len(q.split()) >= 5 and quote_score(quote, text) >= min_ratio
 
 
+_NUM = re.compile(r"\d+(?:[.,]\d+)*")
+_NAME = re.compile(r"\b[A-ZÁÉÍÓÚÂÊÔÃÕÇ][\wÁÉÍÓÚÂÊÔÃÕÇáéíóúâêôãõç-]{2,}")
+_NOT_NAME = {"para", "apos", "segundo", "nesta", "neste", "desde", "como", "entre", "sobre", "durante", "ainda"}
+
+
+def key_terms(text: str) -> tuple[set[str], set[str]]:
+    """Números e nomes próprios de uma frase, já normalizados."""
+    nums = set(_NUM.findall(text))
+    names = {_norm(w) for w in _NAME.findall(text)} - _NOT_NAME
+    return nums, names
+
+
+def has_terms(text: str, nums: set[str], names: set[str]) -> bool:
+    """A matéria traz todos os números e pelo menos 2/3 dos nomes?"""
+    t = _norm(text)
+    found_names = sum(1 for n in names if re.search(rf"\b{re.escape(n)}\b", t))
+    return nums <= set(_NUM.findall(t)) and found_names * 3 >= len(names) * 2
+
+
+def corroborating_article(fact: str, confirmed: Article, ids: dict[str, Article], sources: list[str]) -> Article | None:
+    """Matéria de outro veículo com os mesmos números e nomes do fato (que também precisam estar na já confirmada)."""
+    nums, names = key_terms(fact)
+    if len(nums) + len(names) < 2 or not has_terms(confirmed.text, nums, names):
+        return None
+    return next((a for a in ids.values() if a.source not in sources and has_terms(a.text, nums, names)), None)
+
+
 def build_prompt(articles: list[Article]) -> tuple[str, dict[str, Article]]:
     ids = {f"A{i + 1}": a for i, a in enumerate(articles)}
     parts = [f"[{k}] Fonte: {a.source}\nTítulo: {a.title}\nTexto: {a.summary}" for k, a in ids.items()]
@@ -101,19 +130,25 @@ def build_prompt(articles: list[Article]) -> tuple[str, dict[str, Article]]:
 
 
 def verify(raw: dict, ids: dict[str, Article], min_sources: int = MIN_SOURCES,
-           min_ratio: float = QUOTE_MATCH) -> tuple[list[Fact], int]:
+           min_ratio: float = QUOTE_MATCH, cross: bool = CROSS_CHECK) -> tuple[list[Fact], int]:
     """Mantém só fatos cujas evidências existem literalmente e vêm de fontes distintas suficientes.
 
     Retorna (fatos aprovados, quantidade descartada).
     """
     kept, dropped = [], 0
     for f in raw.get("fatos", []):
-        sources, links = [], []
+        sources, links, confirmed = [], [], []
         for ev in f.get("evidencias", []):
             art = ids.get(ev.get("artigo", "").strip())
             if art and quote_in_text(ev.get("trecho", ""), art.text, min_ratio) and art.source not in sources:
                 sources.append(art.source)
                 links.append(art.link)
+                confirmed.append(art)
+        if cross and len(confirmed) == 1 and min_sources == 2:
+            other = corroborating_article(f.get("fato", ""), confirmed[0], ids, sources)
+            if other:
+                sources.append(other.source)
+                links.append(other.link)
         if len(sources) >= min_sources and f.get("fato", "").strip():
             kept.append(Fact(f["fato"].strip(), sources, links))
         else:

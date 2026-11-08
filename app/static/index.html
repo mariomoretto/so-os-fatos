@@ -32,7 +32,8 @@
     --line: #ebeae5; --chip: #f1f0ec; --accent: #0e7a5a; --accent-bg: #e6f4ee;
     --live: #e03131; --warn: #9a5b12; --warn-bg: #fbf3e6;
     --shadow: 0 1px 2px rgba(0,0,0,.04), 0 4px 16px rgba(0,0,0,.04);
-    --c-politica: #6d5bd0; --c-economia: #0e7a5a; --c-esportes: #e8590c; --c-tecnologia: #1c6dd0; --c-games: #c2255c;
+    --c-politica: #6d5bd0; --c-economia: #0e7a5a; --c-esportes: #e8590c; --c-tecnologia: #1c6dd0;
+    --c-brasil: #2b8a3e; --c-mundo: #0b7285; --c-saude: #d6336c; --c-ciencia: #7048e8; --c-educacao: #e67700; --c-cultura: #ae3ec9;
     --logo1: #0e7a5a; --logo2: #3fbf8f; --logo-check: #fff;
   }
   :root[data-theme="dark"] {
@@ -40,7 +41,8 @@
     --bg: #0d0d0c; --card: #181816; --ink: #efeee9; --muted: #9b9a93; --faint: #6b6a64;
             --line: #262523; --chip: #222220; --accent: #5fd0a8; --accent-bg: #15291f;
             --live: #ff6b6b; --warn: #e3a95b; --warn-bg: #2a2218; --shadow: none;
-            --c-politica: #9d8ff0; --c-economia: #5fd0a8; --c-esportes: #ff9254; --c-tecnologia: #6aa8f5; --c-games: #f06595;
+            --c-politica: #9d8ff0; --c-economia: #5fd0a8; --c-esportes: #ff9254; --c-tecnologia: #6aa8f5;
+            --c-brasil: #69db7c; --c-mundo: #3bc9db; --c-saude: #f783ac; --c-ciencia: #b197fc; --c-educacao: #ffa94d; --c-cultura: #e599f7;
             --logo1: #2fa57c; --logo2: #5fd0a8; --logo-check: #0d0d0c; }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   body { margin: 0; background: var(--bg); color: var(--ink); transition: background .2s, color .2s;
@@ -208,8 +210,9 @@
   .hour span { color: var(--muted); }
   .hour i { font-style: normal; font-size: 22px; }
   .hour b { font-size: 15px; }
-  .hour small { color: var(--c-tecnologia); font-size: 11.5px; font-weight: 600; min-height: 14px; }
-  .day { display: grid; grid-template-columns: 64px 28px 1fr 34px 1.4fr 34px; align-items: center; gap: 6px;
+  .hour small { color: var(--c-tecnologia); font-size: 11.5px; font-weight: 600; min-height: 14px; line-height: 1.25; text-align: center; }
+  .hour small em { display: block; font-style: normal; font-weight: 500; opacity: .8; }
+  .day { display: grid; grid-template-columns: 58px 26px 1.3fr 30px 1fr 30px; align-items: center; gap: 6px;
          padding: 9px 0; border-top: 1px solid var(--line); font-size: 15px; font-variant-numeric: tabular-nums; }
   .day:first-of-type { border-top: 0; }
   .day span { font-weight: 600; text-transform: capitalize; }
@@ -497,6 +500,7 @@ const WMO = {
 };
 const wmo = (code, day = 1) => { const w = WMO[code] || ["—", "🌡️"]; return { text: w[0], icon: !day && w[2] ? w[2] : w[1] }; };
 const rain = p => p >= 20 ? `${p}%` : "";
+const mm = v => v >= 0.1 ? `${brl(v, v < 10 ? 1 : 0)} mm` : "";
 let place = JSON.parse(localStorage.getItem("local") || "null"), weather = null;
 
 function setPlace(p) {
@@ -553,7 +557,7 @@ function showWeather() {
   const hours = h.time.slice(start, start + 24).map((t, i) => {
     const k = start + i, w = wmo(h.weather_code[k], h.is_day[k]);
     return `<div class="hour"><span>${i ? t.slice(11, 13) + "h" : "Agora"}</span><i>${w.icon}</i>
-      <b>${Math.round(h.temperature_2m[k])}°</b><small>${rain(h.precipitation_probability[k])}</small></div>`;
+      <b>${Math.round(h.temperature_2m[k])}°</b><small>${rain(h.precipitation_probability[k])}${mm(h.precipitation[k]) && `<em>${mm(h.precipitation[k])}</em>`}</small></div>`;
   }).join("");
   const lo = Math.min(...d.temperature_2m_min), span = Math.max(...d.temperature_2m_max) - lo || 1;
   const days = d.time.map((t, i) => {
@@ -561,7 +565,7 @@ function showWeather() {
       : new Date(t + "T12:00").toLocaleDateString("pt-BR", { weekday: "short" }).replace(".", "");
     const a = (d.temperature_2m_min[i] - lo) / span * 100, b = (d.temperature_2m_max[i] - lo) / span * 100;
     return `<div class="day"><span>${name}</span><i>${wmo(d.weather_code[i]).icon}</i>
-      <small>${rain(d.precipitation_probability_max[i]) && "💧" + rain(d.precipitation_probability_max[i])}</small>
+      <small>${[rain(d.precipitation_probability_max[i]) && "💧" + rain(d.precipitation_probability_max[i]), mm(d.precipitation_sum[i])].filter(Boolean).join(" · ")}</small>
       <em>${Math.round(d.temperature_2m_min[i])}°</em><div class="bar"><div style="left:${a}%;right:${100 - b}%"></div></div>
       <b>${Math.round(d.temperature_2m_max[i])}°</b></div>`;
   }).join("");
@@ -570,7 +574,8 @@ function showWeather() {
       <div class="wbig"><i>${now.icon}</i><b>${Math.round(c.temperature_2m)}°</b></div>
       <div class="wtext">${now.text} · máx ${Math.round(d.temperature_2m_max[0])}° · mín ${Math.round(d.temperature_2m_min[0])}°</div>
       <div class="wstats"><span>Sensação <b>${Math.round(c.apparent_temperature)}°</b></span>
-        <span>Umidade <b>${c.relative_humidity_2m}%</b></span><span>Vento <b>${Math.round(c.wind_speed_10m)} km/h</b></span></div>
+        <span>Umidade <b>${c.relative_humidity_2m}%</b></span><span>Vento <b>${Math.round(c.wind_speed_10m)} km/h</b></span>
+        <span>Chuva hoje <b>${mm(d.precipitation_sum[0]) || "0 mm"}</b></span></div>
     </section>
     <section class="wcard"><h3>Próximas 24 horas</h3><div class="hours">${hours}</div></section>
     <section class="wcard"><h3>Próximos 7 dias</h3>${days}</section>`;
@@ -585,8 +590,8 @@ async function loadWeather() {
   if (!weather) skeleton();
   const q = `latitude=${place.lat}&longitude=${place.lon}&timezone=auto&forecast_days=7`
     + "&current=temperature_2m,apparent_temperature,weather_code,is_day,relative_humidity_2m,wind_speed_10m"
-    + "&hourly=temperature_2m,weather_code,precipitation_probability,is_day"
-    + "&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max";
+    + "&hourly=temperature_2m,weather_code,precipitation_probability,precipitation,is_day"
+    + "&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,precipitation_sum";
   try { weather = await (await fetch(`https://api.open-meteo.com/v1/forecast?${q}`)).json(); }
   catch { if (!weather) list.innerHTML = `<p class="empty">Sem conexão.</p>`; return; }
   if (tab !== "tempo") return;
