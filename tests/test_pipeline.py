@@ -126,3 +126,33 @@ def test_cross_check_needs_same_numbers_and_names_in_another_outlet():
     wrong = {"fatos": [{"fato": "O Copom manteve a Selic em 14% ao ano.", "evidencias": [
         {"artigo": "A1", "trecho": "manter a taxa básica de juros em 15% ao ano"}]}]}
     assert verify(wrong, ids, cross=True)[0] == []                             # número que não está nas matérias
+
+
+def test_outlet_only_counts_if_its_article_has_the_same_numbers():
+    from app.models import Article
+    g1 = Article("g1", "mundo", "Ataque", "Ataque deixa seis mortos e pelo menos 15 feridos neste sábado (7).", "https://g1.example/a")
+    fo = Article("Folha", "mundo", "Ataque", "Um homem matou seis pessoas e feriu outras 16 neste sábado (7).", "https://fo.example/a")
+    _, ids = build_prompt([g1, fo])
+    raw = {"fatos": [{"fato": "O ataque deixou 15 feridos.", "evidencias": [
+        {"artigo": "A1", "trecho": "deixa seis mortos e pelo menos 15 feridos"},
+        {"artigo": "A2", "trecho": "matou seis pessoas e feriu outras 16"}]}]}
+    assert verify(raw, ids)[0] == []        # Folha diz 16: não confirma "15 feridos"
+    raw["fatos"][0]["fato"] = "O ataque aconteceu no sábado (7)."
+    assert len(verify(raw, ids)[0]) == 1    # data igual nos dois: confirma
+
+
+def test_ai_tried_flag_survives_save_and_restore(tmp_path):
+    con = db.connect(str(tmp_path / "t.db"))
+    story, _ = extract_story(SELIC, FakeClient({"manchete": "x", "fatos": [], "divergencias": []}))
+    assert story is None
+    from pipeline import free_story
+    base = free_story(SELIC)
+    links = [a.link for a in SELIC]
+    assert db.needs_summary(con, links)
+    base.ai_tried = True
+    db.save(con, base)
+    assert not db.needs_summary(con, links)           # já tentou: não tenta de novo
+    rows = db.list_stories(con)
+    con2 = db.connect(str(tmp_path / "t2.db"))
+    db.restore(con2, rows)
+    assert not db.needs_summary(con2, links)          # a marca volta ao recuperar do site

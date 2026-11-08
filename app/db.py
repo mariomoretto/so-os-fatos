@@ -16,7 +16,8 @@ CREATE TABLE IF NOT EXISTS stories (
     facts TEXT NOT NULL,           -- JSON
     divergences TEXT NOT NULL,     -- JSON
     sources TEXT NOT NULL,         -- JSON [{source, title, link}]
-    created_at TEXT NOT NULL
+    created_at TEXT NOT NULL,
+    tried INTEGER NOT NULL DEFAULT 0  -- a IA já tentou resumir
 );
 CREATE INDEX IF NOT EXISTS idx_cat_date ON stories(category, created_at DESC);
 """
@@ -27,6 +28,10 @@ def connect(path: str = DB_PATH) -> sqlite3.Connection:
     con = sqlite3.connect(path)
     con.row_factory = sqlite3.Row
     con.executescript(SCHEMA)
+    try:  # bancos criados antes da coluna "tried"
+        con.execute("ALTER TABLE stories ADD COLUMN tried INTEGER NOT NULL DEFAULT 0")
+    except sqlite3.OperationalError:
+        pass
     return con
 
 
@@ -38,6 +43,15 @@ def exists(con, links: list[str]) -> bool:
     return con.execute("SELECT 1 FROM stories WHERE key=?", (group_key(links),)).fetchone() is not None
 
 
+COLUMNS = "(key, category, headline, facts, divergences, sources, created_at, tried)"
+
+
+def needs_summary(con, links: list[str]) -> bool:
+    """Grupo ainda sem resumo e que a IA ainda não tentou."""
+    row = con.execute("SELECT facts, tried FROM stories WHERE key=?", (group_key(links),)).fetchone()
+    return row is None or (row["facts"] == "[]" and not row["tried"])
+
+
 def save(con, story: Story) -> None:
     """Salva a notícia. Se o acontecimento já existia com menos matérias, a versão antiga sai."""
     links = {a.link for a in story.articles}
@@ -45,7 +59,7 @@ def save(con, story: Story) -> None:
         if links & set(key.split("|")):
             con.execute("DELETE FROM stories WHERE key=?", (key,))
     con.execute(
-        "INSERT OR REPLACE INTO stories VALUES (?,?,?,?,?,?,?)",
+        f"INSERT OR REPLACE INTO stories {COLUMNS} VALUES (?,?,?,?,?,?,?,?)",
         (
             group_key([a.link for a in story.articles]),
             story.category,
@@ -55,6 +69,7 @@ def save(con, story: Story) -> None:
             json.dumps([{"source": a.source, "title": a.title, "link": a.link, "image": a.image} for a in story.articles],
                        ensure_ascii=False),
             story.created_at.isoformat(timespec="seconds"),
+            int(story.ai_tried),
         ),
     )
     con.commit()
@@ -76,6 +91,7 @@ def list_stories(con, category: str | None = None, limit: int = 50) -> list[dict
             "divergences": json.loads(r["divergences"]),
             "sources": json.loads(r["sources"]),
             "created_at": r["created_at"],
+            "ia": bool(r["tried"]),
         })
     return out
 
@@ -84,10 +100,10 @@ def restore(con, stories: list[dict]) -> int:
     """Recarrega notícias de um noticias.json (o formato de list_stories)."""
     for s in stories:
         con.execute(
-            "INSERT OR REPLACE INTO stories VALUES (?,?,?,?,?,?,?)",
+            f"INSERT OR REPLACE INTO stories {COLUMNS} VALUES (?,?,?,?,?,?,?,?)",
             (group_key([a["link"] for a in s["sources"]]), s["category"], s["headline"],
              json.dumps(s["facts"], ensure_ascii=False), json.dumps(s["divergences"], ensure_ascii=False),
-             json.dumps(s["sources"], ensure_ascii=False), s["created_at"]),
+             json.dumps(s["sources"], ensure_ascii=False), s["created_at"], int(s.get("ia", False))),
         )
     con.commit()
     return len(stories)

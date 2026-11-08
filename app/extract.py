@@ -101,9 +101,14 @@ _NAME = re.compile(r"\b[A-ZÁÉÍÓÚÂÊÔÃÕÇ][\wÁÉÍÓÚÂÊÔÃÕÇáé�
 _NOT_NAME = {"para", "apos", "segundo", "nesta", "neste", "desde", "como", "entre", "sobre", "durante", "ainda"}
 
 
+def numbers(text: str) -> set[str]:
+    """Números do texto; "3.083" e "3083" contam como o mesmo."""
+    return {re.sub(r"\.(?=\d{3}\b)", "", n) for n in _NUM.findall(text)}
+
+
 def key_terms(text: str) -> tuple[set[str], set[str]]:
     """Números e nomes próprios de uma frase, já normalizados."""
-    nums = set(_NUM.findall(text))
+    nums = numbers(text)
     names = {_norm(w) for w in _NAME.findall(text)} - _NOT_NAME
     return nums, names
 
@@ -112,7 +117,7 @@ def has_terms(text: str, nums: set[str], names: set[str]) -> bool:
     """A matéria traz todos os números e pelo menos 2/3 dos nomes?"""
     t = _norm(text)
     found_names = sum(1 for n in names if re.search(rf"\b{re.escape(n)}\b", t))
-    return nums <= set(_NUM.findall(t)) and found_names * 3 >= len(names) * 2
+    return nums <= numbers(t) and found_names * 3 >= len(names) * 2
 
 
 def corroborating_article(fact: str, confirmed: Article, ids: dict[str, Article], sources: list[str]) -> Article | None:
@@ -138,9 +143,12 @@ def verify(raw: dict, ids: dict[str, Article], min_sources: int = MIN_SOURCES,
     kept, dropped = [], 0
     for f in raw.get("fatos", []):
         sources, links, confirmed = [], [], []
+        nums = numbers(f.get("fato", ""))
         for ev in f.get("evidencias", []):
             art = ids.get(ev.get("artigo", "").strip())
-            if art and quote_in_text(ev.get("trecho", ""), art.text, min_ratio) and art.source not in sources:
+            # o trecho precisa existir e a matéria precisa trazer os mesmos números do fato
+            if (art and art.source not in sources and quote_in_text(ev.get("trecho", ""), art.text, min_ratio)
+                    and nums <= numbers(art.text)):
                 sources.append(art.source)
                 links.append(art.link)
                 confirmed.append(art)

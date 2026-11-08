@@ -38,3 +38,4 @@ class Story:
     divergences: list[str]
     articles: list[Article] = field(default_factory=list)
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    ai_tried: bool = False  # a IA já tentou resumir este grupo (com ou sem sucesso)

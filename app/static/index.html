@@ -128,9 +128,18 @@
            letter-spacing: .03em; color: var(--muted); padding-top: 2px; }
   .src span { flex: 1; }
   .src i { flex: none; color: var(--faint); font-style: normal; }
-  ul.facts { margin: 0 0 12px; padding-left: 18px; }
-  ul.facts li { margin-bottom: 6px; }
-  .conf { font-size: 12px; color: var(--accent); margin-left: 4px; white-space: nowrap; }
+  ul.facts { list-style: none; margin: 0 0 10px; padding: 0; }
+  ul.facts li { position: relative; padding-left: 18px; margin-bottom: 8px; font-size: 15.5px; line-height: 1.45; }
+  ul.facts li::before { content: ""; position: absolute; left: 3px; top: .62em; width: 6px; height: 6px;
+                        border-radius: 50%; background: var(--accent); }
+  .conf { font-size: 11.5px; font-weight: 600; color: var(--accent); margin-left: 6px; white-space: nowrap; }
+  .ai-note { font-size: 12px; color: var(--faint); margin: 0 0 10px; }
+  details.more { border-top: 1px solid var(--line); }
+  details.more summary { list-style: none; cursor: pointer; padding: 10px 0 0; font-size: 13.5px; font-weight: 600; color: var(--muted); }
+  details.more summary::-webkit-details-marker { display: none; }
+  details.more summary::after { content: " ▾"; }
+  details.more[open] summary::after { content: " ▴"; }
+  details.more .srcs { border-top: 0; }
   .div { background: var(--warn-bg); color: var(--warn); border-radius: 10px; padding: 8px 10px; margin-bottom: 12px; font-size: 14px; }
   .empty { color: var(--muted); text-align: center; padding: 56px 0; }
   .skel { height: 150px; border-radius: 18px; margin-bottom: 14px;
@@ -374,7 +383,8 @@ function storyCard(s) {
   const srcs = s.sources.map(a => `<a class="src" href="${esc(a.link)}" target="_blank" rel="noopener">
       <b>${esc(a.source)}</b><span>${esc(a.title)}</span><i>↗</i></a>`).join("");
   const facts = s.facts.length ? `<ul class="facts">${s.facts.map(f =>
-      `<li>${esc(f.text)}<span class="conf">✓ ${f.sources.length}</span></li>`).join("")}</ul>` : "";
+      `<li>${esc(f.text)}<span class="conf" title="${esc(f.sources.join(", "))}">✓ ${f.sources.length} fontes</span></li>`).join("")}</ul>
+      <p class="ai-note">Resumo automático · cada fato conferido em 2+ veículos</p>` : "";
   const div = s.divergences.length
     ? `<div class="div"><strong>Divergência:</strong> ${s.divergences.map(esc).join("<br>")}</div>` : "";
   const img = s.sources.find(a => a.image)?.image;
@@ -387,7 +397,9 @@ function storyCard(s) {
       <span class="badge">✓ ${outlets} veículos</span>
     </div>
     <h2>${esc(s.headline)}</h2>${facts}${div}
-    <div class="srcs">${srcs}</div>
+    ${s.facts.length
+      ? `<details class="more"><summary>Matérias originais (${s.sources.length})</summary><div class="srcs">${srcs}</div></details>`
+      : `<div class="srcs">${srcs}</div>`}
   </article>`;
 }
 
